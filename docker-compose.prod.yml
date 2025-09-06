@@ -1,0 +1,76 @@
+version: "3.9"
+
+networks:
+  chatnet:
+    driver: bridge
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: bookmory
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bookmory_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatnet
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - chatnet
+
+  server:
+    build:
+      context: ./server
+      target: prod
+    environment:
+      - NODE_ENV=production
+      - PORT=3030
+      - DATABASE_URL=postgresql://bookmory:password@db:5432/bookmory_db?schema=public
+      - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+      - JWT_EXPIRES_IN=7d
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    expose:
+      - "3030"
+    networks:
+      chatnet:
+        aliases:
+          - api
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      target: prod
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    networks:
+      - chatnet
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+  lb:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./load-balancer/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+      - client
+    networks:
+      - chatnet
+
+volumes:
+  postgres_data:
