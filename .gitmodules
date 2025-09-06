@@ -1,0 +1,6 @@
+[submodule "server"]
+	path = server
+	url = git@github.com:DimaDzh/bookmory_rd_server.git
+[submodule "client"]
+	path = client
+	url = git@github.com:DimaDzh/bookmory_rd_client.git
