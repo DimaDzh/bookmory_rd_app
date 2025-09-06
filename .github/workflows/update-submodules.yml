@@ -1,0 +1,34 @@
+name: Update Submodules
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # run daily at 03:00 UTC
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: true # fetch submodules
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update submodules to latest commit
+        run: |
+          git submodule update --remote --merge
+          git status
+
+      - name: Commit and push submodule updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update submodules to latest commits"
+            git push origin main
+          else
+            echo "No submodule updates found."
+          fi
