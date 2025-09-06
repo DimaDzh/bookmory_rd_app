@@ -42,6 +42,12 @@
 
 ## 🐳 Запуск через Docker Compose
 
+```bash
+git clone --recurse-submodules git@github.com:DimaDzh/bookmory_rd_app.git
+
+cd bookmory_rd_app
+```
+
 ### Продакшн збірка
 
 ```bash
